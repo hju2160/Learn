@@ -99,7 +99,7 @@ Analysis Data > Browser URL History\
 Tìm kiếm với filter `decryptor.top`
 ![image](https://github.com/s1mHATs/Learn/blob/main/redline/image/14.2.png?raw=true)\
 flag14:`http://decryptor.top/644E7C8EFA02FBB7`\
-15.**What are some three names associated with the malware which infected this host? (enter the names in alphabetical order)**
+15.**What are some three names associated with the malware which infected this host? (enter the names in alphabetical order)**\
 OSINT: https://attack.mitre.org/software/S0496/ 
 ![image](https://github.com/s1mHATs/Learn/blob/main/redline/image/15.png?raw=true)\
 flag15:`REvil,Sodin,Sodinokibi`
