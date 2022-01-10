@@ -77,4 +77,27 @@ Tìm các file .txt có chứa ext `t48s39la`:
 flag10:`t48s39la-readme.txt`\
 11.**The attacker created a folder "Links for United States" under C:\Users\John Coleman\Favorites\ and left a file there. Provide the name of the file.**
 Analysis Data > Timeline\
-Filter theo tên folder `Links for United States` tìm kiếm với các 
+Filter theo tên folder `Links for United States`, có thể thấy có 2 file `USA.gov.url.t48s39la` và `GobiernoUSA.gov.url.t48s39la` được tạo cùng lúc với folder:
+![image]()\
+flag11:`GobiernoUSA.gov.url.t48s39la`\
+12.**There is a hidden file that was created on the user's Desktop that has 0 bytes. Provide the name of the hidden file.**
+Analysis Data > File System > User > John Coleman > Desktop
+![image]()\
+flag12:`d60dff40.lock`\
+13.**The user downloaded a decryptor hoping to decrypt all the files, but he failed. Provide the MD5 hash of the decryptor file.**
+Thử mã md5 của file `d.e.c.r.yp.tor.exe` tìm ở trên:
+![image]()\
+flag13:`f617af8c0d276682fdf528bb3e72560b`\
+14.**In the ransomware note, the attacker provided a URL that is accessible through the normal browser in order to decrypt one of the encrypted files for free. The user attempted to visit it. Provide the full URL path.**
+> Theo Secureworks, REvil sẽ cung cấp một url duy nhất để giải mã các file đã bị mã hóa.
+
+Kiểm tra trong Note mẫu có thể thấy url là: http://decryptor.top/{UID}\
+Trong đó UID là số serial của ổ đĩa và CPUID của máy chủ.
+![image]()\
+Analysis Data > Browser URL History\
+Tìm kiếm với filter `decryptor.top`
+![image]()\
+flag14:`http://decryptor.top/644E7C8EFA02FBB7`\
+15.**What are some three names associated with the malware which infected this host? (enter the names in alphabetical order)**
+OSINT: https://attack.mitre.org/software/S0496/
+flag15:`REvil,Sodin,Sodinokibi`
