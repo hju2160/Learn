@@ -11,7 +11,8 @@ echo "Hello World!"
 whoami
 id
 ```
-**Variables**\
+<h3>Variables</h3>
+
 Các biến trong bash script có thể tạo đơn giản như sau:
 ```bash
 name="Hieu"
@@ -47,7 +48,8 @@ age=22
 echo "$name $age $city"
 ```
 ![image](https://user-images.githubusercontent.com/95600382/149728905-20e0aac2-b51e-4c7d-a0fe-b1e732f0fbce.png)
-**Parameters**
+<h3>Parameters</h3>
+
 Các tham số vẫn thường có ký hiệu `$` đứng trc vì chúng cũng được coi là một biến\
 Thử chạy script sau với input là Hieu123:\
 ```
@@ -67,4 +69,58 @@ echo "Name is: $name"
 ```
 KQ:\
 ![image](https://user-images.githubusercontent.com/95600382/149730438-d35242f3-9075-4bad-bbf0-74e38316df68.png)\
-**Array**
+<h3>Array</h3>
+
+Các array thường đc sử dụng để lưu trữ các dữ liệu của một tham số và có thể trích xuất và sử dụng với index. Đc sử dụng nhiều nhất là `var[vị trí index]`\
+VD về indexing trong array:\
+['one','two','three']\
+index tương ứng sẽ là 0 1 2\
+VD:\
+```bash
+cars=('honda' 'audi' 'bmw' 'tesla')
+echo "${cars[@]}" # in tất cả các giá trị trong array
+echo "${cars[1]}" # in giá trị ở vị trí 1
+unset cars[3] # xóa giá trị tại vị trí 3
+cars[3]='toyota' # thay thế giá trị vị trí 3
+```
+KQ:\
+![image](https://user-images.githubusercontent.com/95600382/149734246-2a99d91d-0675-4442-b79d-4d2b44f113d7.png)\
+<h3>Conditinals</h3>
+
+Các điều kiện thường được sử dụng là = > <. Một ví dụ về sử dụng if cho điều kiện =:\
+```bash
+count=10
+if [$count -eq 10]
+then
+    echo "true"
+else
+    echo "false"
+fi
+```
+Note:
+|Operator|Des|
+|---|---|
+|-eq|=|
+|-ne|!=|
+|-gt|>|
+|-lt|<|
+|-ge|>=|
+
+VD bài tập:
+```bash
+#!/bin/bash
+echo "Filename:"
+read filename
+if [ -f "$filename" ] && [ -w "$filename" ]
+then
+    echo "hello" > $filename
+else
+    touch "$filename"
+    echo "hello" > $filename
+fi
+```
+Trong đó `-f` kiểm tra xem file có tồn tại k, `-w` kiểm tra xem file có quyền ghi không. tương tự ta có kiểm tra quyền đọc `-r` và kiểm tra xem có phải là dictionary không `-d`.\
+KQ:\
+![image](https://user-images.githubusercontent.com/95600382/149737574-8d1b0511-cd79-401a-b6fe-8c0ba0f1b0e5.png)\
+
+
