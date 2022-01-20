@@ -248,21 +248,179 @@ addSwitch
 addHost
 addLink
 ```
-3. Định nghĩa Controller 
+Có 2 cách để custom topo cho mininet\
+Cách 1: Tạo một file custom topo và chạy với lệnh `mn`
+Tạo một file `mn.py` như sau:
 ```python
-if __name__ == '__main__':
-    topo = SingleSwitchTopo()
-    c1 = RemoteController('c1', ip='127.0.0.1')
-    net = Mininet(topo=topo, controller=c1)
-    net.start()
-```
-4. Chạy Test
-- Start RYU SDN Controller
-```
-ryu-manager ryu.app.simple_switch_13
-```
-- Chạy Mininet topo
-```
+from mininet.topo import Topo
+from mininet.net import Mininet  
+class MyTopo( Topo ):  
+    "Simple topology example."
+    def __init__( self ):
+        "Create custom topo."
 
+        # Initialize topology
+        Topo.__init__( self )
+
+        # Add hosts and switches
+        Host1 = self.addHost( 'h1' )
+        Host2 = self.addHost( 'h2' )
+        Host3 = self.addHost( 'h3' )
+        Host4 = self.addHost( 'h4' )
+
+        sw1 = self.addSwitch('s1')
+        sw2 = self.addSwitch('s2')
+        sw3 = self.addSwitch('s3')
+        # Add links
+        self.addLink( sw1, sw2)
+        self.addLink( sw1, sw3)
+
+        self.addLink( Host1, sw3 )
+        self.addLink( Host2, sw3 )
+        self.addLink( Host3, sw2 )
+        self.addLink( Host4, sw2 )
+topos = { 'tp': ( lambda: MyTopo() ) } 
 ```
-- Test
+Chạy RYU Controller:
+```
+sudo mn --custom mn.py --topo tp --controller=remote,ip=127.0.0.1 --mac -i 10.1.1.0/24
+```
+(Lưu ý: chạy thẳng trong thư mục chứa file mn.py hoặc trích đường dẫn đầy đủ để chạy)\
+Kiểm tra flows trong các SW trc khi ping, có thể thấu chỉ tồn tại 1 flow mặc định để gửi packet về Controller:\
+![image](https://user-images.githubusercontent.com/95600382/150297307-e2d090ea-e98e-4759-8144-728358bdd57c.png)\
+Kiểm tra flows sau khi ping:\
+Sw1:\
+![image](https://user-images.githubusercontent.com/95600382/150297547-b6efd24e-bc73-4207-b7a4-4ffd5d01c7f7.png)\
+Sw2:\
+![image](https://user-images.githubusercontent.com/95600382/150297600-24508211-f679-4863-8eb7-3dbe5134a766.png)\
+Sw3:\
+![image](https://user-images.githubusercontent.com/95600382/150297663-1fde8de2-862a-4f80-8743-a90811cfc4d1.png)\
+Kiểm tra thêm trong mininet với `dump` và `net`:\
+![image](https://user-images.githubusercontent.com/95600382/150297956-855b1069-e972-4eb5-a4aa-068504fe9bf7.png)\
+
+Cách 2: Tạo một scripts python và chạy không cần lệnh `mn`\
+(Tham khảo: https://github.com/mininet/mininet/blob/master/examples/README.md)\
+Python Script:
+```python
+#!/usr/bin/env python
+from mininet.net import Mininet
+from mininet.node import RemoteController
+from mininet.cli import CLI
+from mininet.log import setLogLevel, info
+import time
+
+def emptyNet():
+
+    "Create an empty network and add nodes to it."
+
+    net = Mininet( controller=RemoteController )
+
+    info( '*** Adding remote controller\n' )
+    net.addController( 'c0' , controller=RemoteController,ip="127.0.0.1",port=6653)
+
+    info( '*** Adding hosts\n' )
+    h1 = net.addHost( 'h1', ip='10.0.0.1' )
+    h2 = net.addHost( 'h2', ip='10.0.0.2' )
+
+    info( '*** Adding switch\n' )
+    s3 = net.addSwitch( 's3' )
+
+    info( '*** Creating links\n' )
+    net.addLink( h1, s3 )
+    net.addLink( h2, s3 )
+
+    info( '*** Starting network\n')
+    net.start()
+
+    info( '*** Running CLI\n' )
+    CLI( net )
+
+    info( '*** Stopping network' )
+    net.stop()
+
+
+if __name__ == '__main__':
+    setLogLevel( 'info' )
+    emptyNet()
+```
+Sau đó chạy bằng lệnh `sudo python3`. Kết quả:
+![image](https://user-images.githubusercontent.com/95600382/150300607-0615174b-1ec9-425f-9493-19b04f08b7c6.png)\
+![image](https://user-images.githubusercontent.com/95600382/150300681-2d8aad9c-6a4e-47fc-b088-4ab71f553b4e.png)\
+Một ví dụ khác:
+```python
+#!/usr/bin/env python
+from mininet.net import Mininet
+from mininet.node import RemoteController
+from mininet.cli import CLI
+from mininet.log import setLogLevel, info
+import time
+
+def emptyNet():
+
+    "Create an empty network and add nodes to it."
+
+    net = Mininet( controller=RemoteController )
+
+    info( '*** Adding remote controller\n' )
+    net.addController( 'c0' , controller=RemoteController,ip="127.0.0.1",port=6653)
+
+    info( '*** Adding hosts\n' )
+    h1 = net.addHost( 'h1' )
+    h2 = net.addHost( 'h2' )
+    h3 = net.addHost( 'h3' )
+	sv1 = net.addHost( 'sv1' )
+	sv2 = net.addHost( 'sv2' )
+    info( '*** Adding switch\n' )
+	s1 = net.addSwitch( 's1' )
+	s2 = net.addSwitch( 's2' )
+    s3 = net.addSwitch( 's3' )
+
+    info( '*** Creating links\n' )
+    net.addLink( h1, s2 )
+    net.addLink( h2, s2 )
+	net.addLink( h3, s2 )
+	net.addLink( sv1, s3 )
+    net.addLink( sv2, s3 )
+	net.addLink( s1, s2 )
+	net.addLink( s1, s3 )
+	
+    info( '*** Starting network\n')
+    net.start()
+
+    info( '*** Running CLI\n' )
+    CLI( net )
+
+    info( '*** Stopping network' )
+    net.stop()
+
+
+if __name__ == '__main__':
+    setLogLevel( 'info' )
+    emptyNet()
+```
+<h2>Openflow Theory</h2>
+
+<h3>Introduction</h3>
+
+Giao thức OpenFlow sử dụng để quản lý các OpenFlow SW từ remote OpenFlow Controller/
+Các version của OpenFlow: 1.1,1.2,1.3,1.4,1.5\
+Trong đó sử dụng rộng rãi nhất là 1.3\
+
+<h3>Switch Components</h3>
+
+Các phần logic của một OpenFlow SW bao gồm một hoặc nhiều các flow tables và các table group. Các bảng này được sử dụng trong quá trình lookup và forward packet và một hoặc nhiều các OpenFlow Channel kết nối tới các Controller\
+![image](https://user-images.githubusercontent.com/95600382/150316885-e723f892-0707-4471-ad92-968489c7a5b5.png)\
+- Các giao tiếp giữa SW với Controller và Controller quản lý SW được thực hiện thông qua giao thức OpenFlow
+- Thông qua giao thức OpenFlow, Controller có thể add, update, delete flow trong flow table, theo cả 2 cách chủ động (response packet) và bị động.
+- Mỗi flow table sẽ bao gồm 1 tập các flow entry; mỗi flow entry sẽ bao gồm match field, counter và một tập hợp các thông để match gói
+- Việc match packet sẽ được so khớp từ các flow table đầu tiên
+- Các flow entries sẽ được match với packet theo priority và flow đầu tiên match trong tất cả các bảng sẽ được sử dụng
+- Khi tìm thấy flow match, các chỉ dẫn có trong flow đó sẽ được áp dụng cho packet
+- Khi packet không match với flow nào, đường đi sẽ phụ thuộc vào cấu hình của table-miss flow entry: VD, packet có thể được forward tới Controller thông qua OpenFlow channel, drop hoặc xét các flow table tiếp theo.
+- Các action sẽ được mô tả trong flow entry
+- Flow entry có thể forward tới các port trên SW, thường là port vật lý và có thể là các port Logic được định nghĩa trên SW (link aggregation groups, tunnels or loopback interfaces).
+
+<h3>OpenFlow Channel</h3>
+
+
+
