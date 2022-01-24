@@ -422,5 +422,45 @@ Các phần logic của một OpenFlow SW bao gồm một hoặc nhiều các fl
 
 <h3>OpenFlow Channel</h3>
 
+- Là một interface kết nỗi các OpenFlow Logic SW tới Openflow Controller. Thông qua interface này, Controller có thể cấu hình và quản lý Switch, nhận event từ SW và điều hướng các packet cho SW
+- Control Channel của SW hỗ trợ cả single channel và multiple channel tới Controller
+- Các OpenFlow Channel thường được mã hóa với TLS hoặc có thể chạy trực tiếp trên TCP
+- Default port: 6653
 
+<h3>OpenFlow Table</h3>
+
+Các Flow table entry được xác định bởi các match field và priority: 2 giá trị này sẽ đi với nhau để quyết định một flow entry duy nhất trong flow table.\
+Một flow table bao gồm các flow entry\
+![image](https://user-images.githubusercontent.com/95600382/150763851-581f9479-c81c-4f5c-934c-78b8f2b5a2fa.png)\
+Trong đó:\
+- match fields: so khớp với packet. Bao gồm các cổng và packet header, hoặc các trường được chỉ định trong flow table
+- priority: độ ưu tiên của flow entry
+- counters: update khi có packet match
+- intructions: để sửa đổi tập action hoặc pipeline processing
+- timeouts: Khoảng thời gian tối đa hoặc idle time trước khi flow hết hạn
+- cookie: giá trị được chọn bởi Controller. Có thể được controller sử dụng để lọc các flow entry bị ảnh hưởng bởi các flow statistics, flow modification và flow deletion requests. k sử dụng để sử lý packet.
+- flags: thông báo (VD:  flag OFPFF_SEND_FLOW_REM triggers flow removed messages for that flow entry.)
+
+Một flow entry mà có tất cả match fields là * và priority=0 thì gọi là table-miss flow entry (Flow sử dụng để gửi packet đến Controller)
+Ví dụ flow table khi so khớp với MAC:
+```
+ cookie=0x0, duration=4.742s, table=0, n_packets=2, n_bytes=196, priority=1,in_port="s1-eth2",dl_src=00:00:00:00:11:12,dl_dst=00:00:00:00:11:11 actions=output:"s1-eth1"\
+ cookie=0x0, duration=4.738s, table=0, n_packets=1, n_bytes=98, priority=1,in_port="s1-eth1",dl_src=00:00:00:00:11:11,dl_dst=00:00:00:00:11:12 actions=output:"s1-eth2"\
+ cookie=0x0, duration=5.781s, table=0, n_packets=29, n_bytes=3102, priority=0 actions=CONTROLLER:65535
+```
+Ví dụ flow table khi so khớp với IP:
+```
+ cookie=0x0, duration=12.927s, table=0, n_packets=2, n_bytes=196, priority=1,ip,nw_src=192.168.1.1,nw_dst=192.168.1.2 actions=output:"s1-eth2"
+ cookie=0x0, duration=12.918s, table=0, n_packets=2, n_bytes=196, priority=1,ip,nw_src=192.168.1.2,nw_dst=192.168.1.1 actions=output:"s1-eth1"
+ cookie=0x0, duration=12.959s, table=0, n_packets=37, n_bytes=3844, priority=0 actions=CONTROLLER:65535
+```
+Ví dụ flow table khi so khớp với Port:
+```
+ cookie=0x0, duration=3.933s, table=0, n_packets=238752, n_bytes=11069190464, priority=1,tcp,nw_src=192.168.1.2,nw_dst=192.168.1.1,tp_src=37304,tp_dst=5001 actions=output:"s1-eth1"
+ cookie=0x0, duration=3.906s, table=0, n_packets=192421, n_bytes=12699810, priority=1,tcp,nw_src=192.168.1.1,nw_dst=192.168.1.2,tp_src=5001,tp_dst=37304 actions=output:"s1-eth2"
+ cookie=0x0, duration=31.495s, table=0, n_packets=43, n_bytes=4309, priority=0 actions=CONTROLLER:65535
+suresh@suresh-vm:~$
+```
+
+<h3>OpenFlow Matching</h3>
 
