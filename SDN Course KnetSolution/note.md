@@ -464,3 +464,82 @@ suresh@suresh-vm:~$
 
 <h3>OpenFlow Matching</h3>
 
+Khi nhận được một gói tin, một OpenFlow Sw sẽ thực hiện các bước sau đây:\
+![image](https://user-images.githubusercontent.com/95600382/151138786-90d2e117-e350-44bb-94f7-25d7dfdc5d58.png)
+####Match Fields
+```
+Switch input port. */
+Switch physical input port. *
+Ethernet destination address. */
+Ethernet source address. */
+Ethernet frame type. */
+VLAN id. */
+VLAN priority. */
+IP DSCP (6 bits in ToS field). */
+IP ECN (2 bits in ToS field). */
+IP protocol. */
+IPv4 source address. */
+IPv4 destination address. */
+TCP source port. */
+TCP destination port. */
+UDP source port. */
+UDP destination port. */
+SCTP source port. */
+SCTP destination port. */
+ICMP type. */
+ICMP code. */
+ARP opcode. */
+ARP source IPv4 address. */
+ARP target IPv4 address. */
+ARP source hardware address. */
+ARP target hardware address. */
+IPv6 source address. */
+IPv6 destination address. */
+IPv6 Flow Label */
+ICMPv6 type. */
+ICMPv6 code. */
+Target address for ND.
+Source link-layer for ND. */
+Target link-layer for ND. */
+MPLS label. */
+MPLS TC. */
+MPLS BoS bit. */
+PBB I-SID. */
+Logical Port Metadata. */
+IPv6 Extension Header pseudo-field */
+```
+- Match field có 2 loại, header match field hoặc pipeline match field
+- Header match field là các giá trị được lấy từ packet header. 
+- All header match fields have different size, prerequisites and masking capability
+- Pipeline match field là các giá trị đc đính kèm trong packet cho quá trình xử lý pipeline và không liên quan đến packet header như META_DATA, TUNNEL_ID,...
+
+Prerequisties Example:\
+- Nếu muốn so khớp theo SRC IP, điều kiện bắt buộc ch ETH_TYPE sẽ là 0X0800. Có nghĩa là sẽ cần trường ETH_TYPE match cùng.
+
+Instructions:
+- Mỗi một flow entry sẽ bao gồm một set các chỉ dẫn mà được áp dụng cho các packet match entry. Các chỉ dẫn này là kết quả của sự thay đổi trong packet, action set hoặc pipeline processing
+
+Apply-Actions action(s):
+- Apply action ngay lập tức mà không cần thay đổi Action Set
+- Instruction này có thể được sử dụng modify the packet between two tables or to execute multiple actions of the same type.
+- The actions are specified as a list of actions
+
+.... đọc thêm trong docx\
+
+Action Set và Action:\
+VD các action:\
+Output port no\
+Group group id\
+Drop\
+Set-Queue queue id\
+Push-Tag/Pop-Tag ethertype (VLAN, MPLS, PBP)\
+Set-Field field type value\
+Change-TTL (IP TTL, MPLS TTL)\
+
+#### Flow Removal\
+Flow entries are removed from flow tables in two ways, either at the request of the controller or via the switch flow expiry mechanism.\
+
+### Openflow Messages
+
+
+
