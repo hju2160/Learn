@@ -35,3 +35,38 @@ sudo mount -t nfs IP:share /tmp/mount/ -nolock
 -t nfs type of device to mount\
 IP:share IP của NFS server, trên của phần muốn mount\
 -nolock chỉnh định không dùng NLM locking
+
+Sử dụng nmap để khai thác thông tin.
+```
+nmap -p- -A -sC -Pn [IP add]
+```
+![image](https://user-images.githubusercontent.com/95600382/155302225-bbccb88b-f5da-48d0-8680-7860da114abc.png)\
+![image](https://user-images.githubusercontent.com/95600382/155302248-8f488bb4-6b5b-4a41-ae01-6b4efa928ab2.png)\
+
+**Answer**\
+Conduct a thorough port scan scan of your choosing, how many ports are open? `7`\
+Which port contains the service we're looking to enumerate? `2049`\
+Sử dụng lệnh để xem các file đc share
+```
+showmount -e [IP]
+```
+![image](https://user-images.githubusercontent.com/95600382/155302968-e0ca18be-8bfe-40b7-bedc-d806e505f0a5.png)\
+Now, use /usr/sbin/showmount -e [IP] to list the NFS shares, what is the name of the visible share? `/home`\
+Tạo thư mục /tmp/mount và mount file share về máy local vào thư mục vừa tạo
+```
+mkdir /tmp/mount
+sudo mount -t nfs IP:file_share /tmp/mount/ -nolock
+```
+Then, use the mount command we broke down earlier to mount the NFS share to your local machine. Change directory to where you mounted the share- what is the name of the folder inside? `cappucino`\
+![image](https://user-images.githubusercontent.com/95600382/155303923-df4a0e1a-ad17-4cbc-96f7-13dd14eea3f1.png)\
+Nhìn vào file vừa lấy đc, có vẻ đây là thư mục home của uesr cappucino.\
+Interesting! Let's do a bit of research now, have a look through the folders. Which of these folders could contain keys that would give us remote access to the server? `.ssh`\
+Which of these keys is most useful to us? `id_rsa`\
+Copy this file to a different location your local machine, and change the permissions to "600" using "chmod 600 file".\
+Assuming we were right about what type of directory this is, we can pretty easily work out the name of the user this key corresponds to.\
+Can we log into the machine using ssh -i <key-file> <username>@<ip> ? `Y`
+```
+ssh -i file_key user@IP
+```  
+![image](https://user-images.githubusercontent.com/95600382/155305146-99b81688-e6b5-45d4-920d-6a930ed2bd38.png)\
+Có thể sử dụng NFS share để thực hiện leo thang đặc quyền, phụ thuộc vào cách NFS đc config. Mặc định NFS Shares- Root Squashing được enable
