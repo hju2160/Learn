@@ -64,9 +64,43 @@ Interesting! Let's do a bit of research now, have a look through the folders. Wh
 Which of these keys is most useful to us? `id_rsa`\
 Copy this file to a different location your local machine, and change the permissions to "600" using "chmod 600 file".\
 Assuming we were right about what type of directory this is, we can pretty easily work out the name of the user this key corresponds to.\
-Can we log into the machine using ssh -i <key-file> <username>@<ip> ? `Y`
+Can we log into the machine using `ssh -i <key-file> <username>@<ip>` ? `Y`
+  
 ```
 ssh -i file_key user@IP
 ```  
+
 ![image](https://user-images.githubusercontent.com/95600382/155305146-99b81688-e6b5-45d4-920d-6a930ed2bd38.png)\
-Có thể sử dụng NFS share để thực hiện leo thang đặc quyền, phụ thuộc vào cách NFS đc config. Mặc định NFS Shares- Root Squashing được enable
+Có thể sử dụng NFS share để thực hiện leo thang đặc quyền, phụ thuộc vào cách NFS đc config. Mặc định NFS Shares- Root Squashing được enable và chặn tất cả các kết nối tới NFS share với quyền root vào ổ đĩa. Remote root user có thể đc đăng ký thành "nfsnobody" khi kết nối, với quyền tối thiểu. However, if this is turned off, it can allow the creation of SUID bit files, allowing a remote user root access to the connected system.\
+SUID\
+So, what are files with the SUID bit set? Essentially, this means that the file or files can be run with the permissions of the file(s) owner/group. In this case, as the super-user. We can leverage this to get a shell with these privileges!\
+Method\
+This sounds complicated, but really- provided you're familiar with how SUID files work, it's fairly easy to understand. We're able to upload files to the NFS share, and control the permissions of these files. We can set the permissions of whatever we upload, in this case a bash shell executable. We can then log in through SSH, as we did in the previous task- and execute this executable to gain a root shell!\
+The Executable\
+Due to compatibility reasons, we'll use a standard Ubuntu Server 18.04 bash executable, the same as the server's- as we know from our nmap scan. You can download it here.\
+Mapped Out Pathway:\
+
+If this is still hard to follow, here's a step by step of the actions we're taking, and how they all tie together to allow us to gain a root shell:\
+
+
+    NFS Access ->
+
+        Gain Low Privilege Shell ->
+
+            Upload Bash Executable to the NFS share ->
+
+                Set SUID Permissions Through NFS Due To Misconfigured Root Squash ->
+
+                    Login through SSH ->
+
+                        Execute SUID Bit Bash Executable ->
+
+                            ROOT ACCESS
+
+Lets do this!\
+![image](https://user-images.githubusercontent.com/95600382/157795489-4d33fee5-de18-4cde-97f2-3187ba97a3fe.png)\
+![image](https://user-images.githubusercontent.com/95600382/157797890-d3cf0cc1-1533-452b-93db-bbd51e03dec9.png)\
+![image](https://user-images.githubusercontent.com/95600382/157799338-999f322a-55b8-4848-8d92-180e74ca74a0.png)\
+![image](https://user-images.githubusercontent.com/95600382/157800849-95f7f824-ebda-4f24-baad-2b3a2d818e17.png)\
+  
+
